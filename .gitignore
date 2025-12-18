@@ -38,7 +38,3 @@ dist/
 # Temporary files
 *.swp
 *.swo
-#format
-*.jpg
-*.jpeg
-*.png
