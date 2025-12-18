@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pdb
+*.egg
+*.egg-info/
+*.log
+
+data/
+
+# Virtual environments
+env/
+venv/
+.venv/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# Test & Coverage
+.coverage
+coverage.xml
+htmlcov/
+
+# Build & Distribution
+build/
+dist/
+
+# Temporary files
+*.swp
+*.swo
+#format
+*.jpg
+*.jpeg
+*.png
