@@ -1,7 +1,6 @@
-````markdown
-# Multi-Task Fashion Classification Using Keras Functional API
+# Multi-Task Fashion Classification with Keras Functional API
 
-This project implements a **multi-task convolutional neural network (CNN)** to simultaneously classify the **category** and **color** of clothing images. The network is designed using the **Keras Functional API**, allowing flexible architecture with shared inputs and multiple task-specific outputs. Separate losses, configurable loss weights, and structured evaluation metrics ensure robust multi-task learning.
+This project presents a **multi-task convolutional neural network (CNN)** that simultaneously predicts the **category** and **color** of clothing images. The model is implemented using the **Keras Functional API**, enabling a flexible architecture with shared feature extraction and task-specific output branches. Separate loss functions, configurable loss weights, and structured evaluation metrics ensure robust and interpretable multi-task learning.
 
 ---
 
@@ -23,46 +22,46 @@ This project implements a **multi-task convolutional neural network (CNN)** to s
 
 ## Dataset
 
-The dataset contains clothing images labeled with both **category** and **color**. All images are resized to **96×96 pixels** and normalized to `[0,1]`.
+The dataset consists of clothing images annotated with both **category** and **color** labels.  
+All images are resized to **96×96 pixels** and normalized to the range `[0,1]`.
 
 | Category & Color | Number of Images |
-|-----------------|-----------------|
-| black_jeans     | 344             |
-| black_jeans     | 358             |
-| blue_dress      | 386             |
-| blue_jeans      | 356             |
-| blue_shirt      | 369             |
-| red_dress       | 380             |
-| red_shirt       | 332             |
+|------------------|------------------|
+| black_jeans      | 344              |
+| black_shirt      | 358              |
+| blue_dress       | 386              |
+| blue_jeans       | 356              |
+| blue_shirt       | 369              |
+| red_dress        | 380              |
+| red_shirt        | 332              |
 
-- **Training/Test Split**: 80% training, 20% testing.  
-- Each image consistently retains both category and color labels to preserve alignment across tasks.  
+- **Split**: 80% training, 20% testing  
+- Each image retains both labels to ensure alignment across tasks  
 
-> **Note**: Dataset source is custom; images organized as `color_category/imagename.jpg`.
+> **Note**: Dataset is custom-built, organized as `color_category/imagename.jpg`.
 
 ---
 
 ## Project Overview
 
-- **Objective**: Predict clothing **category** (e.g., jeans, dress, shirt) and **color** (e.g., red, blue, black) simultaneously.  
-- **Approach**: Multi-task CNN using **Keras Functional API**.  
-- **Advantages**:
-  - Shared feature extraction reduces computation.  
-  - Task-specific branches allow independent learning of category and color.  
-  - Separate losses for better optimization and interpretability.  
+- **Goal**: Predict clothing **category** (e.g., jeans, dress, shirt) and **color** (e.g., red, blue, black) at the same time.  
+- **Method**: Multi-task CNN with shared backbone and task-specific heads.  
+- **Benefits**:
+  - Shared feature extraction reduces redundancy.  
+  - Independent branches allow specialized learning.  
+  - Separate losses improve optimization and interpretability.  
 
 ---
 
 ## Keras Functional API
 
-The **Functional API** allows flexible network definitions with:
+The **Functional API** supports:
 
-- Multiple inputs  
-- Multiple outputs  
-- Shared layers  
-- Non-linear computation graphs  
+- Multiple inputs and outputs  
+- Shared layers across tasks  
+- Flexible non-linear computation graphs  
 
-Unlike the Sequential API, layers are treated as functions operating on tensors. In this project, it enables a **shared input layer** and **two separate output branches** for category and color:
+In this project, a **shared input layer** feeds into two distinct branches:
 
 ```python
 net = models.Model(
@@ -70,37 +69,34 @@ net = models.Model(
     outputs=[cat_net, col_net],
     name="fashionNet"
 )
-````
+```
 
-This structure allows shared feature extraction at the input level while preserving **task-specific branches** for each prediction.
+This design enables efficient feature sharing while preserving task-specific learning.
 
 ---
 
 ## Label Encoding
 
-`LabelBinarizer` from `scikit-learn` is used to convert string labels to one-hot vectors:
+Labels are converted to one-hot vectors using `LabelBinarizer` from `scikit-learn`.
 
-* **Advantages**:
-
-  * Automatically handles string labels
-  * Outputs compatible with `categorical_crossentropy`
-  * Simple and reliable for multi-class classification
+**Advantages**:
+- Direct support for string labels  
+- Compatible with `categorical_crossentropy`  
+- Simple and reliable  
 
 **Alternatives**:
 
 | Method         | Notes                                                                      |
-| -------------- | -------------------------------------------------------------------------- |
-| LabelEncoder   | Produces integer labels; requires conversion for categorical cross-entropy |
+|----------------|----------------------------------------------------------------------------|
+| LabelEncoder   | Produces integers; requires conversion for categorical cross-entropy       |
 | OneHotEncoder  | Flexible for pipelines but more complex                                    |
 | to_categorical | Requires integer labels; suitable when labels are numeric                  |
-
-`LabelBinarizer` is the practical choice for this project.
 
 ---
 
 ## Data Splitting
 
-Dataset is split using `train_test_split`:
+Data is split with `train_test_split`:
 
 ```python
 train_test_split(
@@ -112,25 +108,26 @@ train_test_split(
 )
 ```
 
-* Ensures **80% training** and **20% testing**
-* Maintains consistent pairing of images with both category and color labels
+- Ensures 80/20 split  
+- Maintains consistent pairing of category and color labels  
 
 ---
 
 ## Multi-Output Network
 
-The network takes a **single image input** and produces two outputs:
+The network produces two outputs from a single image input:
 
-* `category_output`: predicts clothing category
-* `color_output`: predicts clothing color
+- `category_output`: clothing category  
+- `color_output`: clothing color  
 
-Each branch has independent convolutional and dense layers to learn task-specific features while sharing early representations. This approach improves efficiency and encourages knowledge transfer between related tasks.
+Early layers are shared, while each branch has its own convolutional and dense layers.  
+This improves efficiency and encourages knowledge transfer.
 
 ---
 
 ## Loss Functions & Weighting
 
-**Separate losses** are assigned for each output:
+Each output has its own loss:
 
 ```python
 losses = {
@@ -139,42 +136,28 @@ losses = {
 }
 ```
 
-* **Benefits**:
-
-  * Independent optimization for each task
-  * Clear interpretability of training dynamics
-  * Easier debugging and analysis
-
-**Loss weights** allow balancing contributions of each task:
+**Loss weights** balance contributions:
 
 ```python
 loss_weights = {"category_output": 1.0, "color_output": 1.0}
 ```
 
-* **Purpose**:
-
-  * Prevent one task from dominating
-  * Improve convergence stability
-  * Adjust for tasks with different difficulty or loss scales
-
-**Weighted total loss formula**:
+Weighted total loss:
 
 ```
-L_total = L1 + λ * L2
+L_total = L_category + λ * L_color
 ```
 
-* `λ` can be tuned based on validation performance.
-* Practical strategies:
-
-  * Manual tuning with grid search
-  * Normalization using initial loss magnitudes
-  * Dynamic weighting approaches (GradNorm, uncertainty weighting, DWA)
+Strategies for tuning λ:
+- Manual grid search  
+- Normalization by initial loss magnitudes  
+- Dynamic methods (GradNorm, uncertainty weighting, DWA)  
 
 ---
 
 ## Training
 
-Training is performed with `model.fit`:
+Training with `model.fit`:
 
 ```python
 history = model.fit(
@@ -182,55 +165,49 @@ history = model.fit(
     y={"category_output": train_Category_Y, "color_output": train_Color_Y},
     validation_data=(test_X, {"category_output": test_Category_Y, "color_output": test_Color_Y}),
     epochs=EPOCHS,
-    verbose=VERBOS
+    verbose=VERBOSE
 )
 ```
 
-* Outputs and validation data are structured as dictionaries matching output layer names.
-* Keras automatically assigns corresponding losses and weights.
-* Recommended callbacks: `ModelCheckpoint`, `EarlyStopping`, `ReduceLROnPlateau`.
+- Outputs structured as dictionaries  
+- Recommended callbacks: `ModelCheckpoint`, `EarlyStopping`, `ReduceLROnPlateau`  
 
 ---
 
 ## Evaluation & Visualization
 
-* **Category Predictions**:
+- **Category**:
+  - Loss curve: `plot/category_loss.png`
+  - Metrics: `plot/category_metrics.png`
+  - Confusion matrix: `plot/category_confusion_matrix.png`
 
-  * Loss: `plot/category_loss.png`
-  * Metrics: `plot/category_metrics.png`
-  * Confusion Matrix: `plot/category_confusion_matrix.png`
+- **Color**:
+  - Loss curve: `plot/color_loss.png`
+  - Metrics: `plot/color_metrics.png`
+  - Confusion matrix: `plot/color_confusion_matrix.png`
 
-* **Color Predictions**:
+- **Combined Loss**: `plot/total_loss.png`
 
-  * Loss: `plot/color_loss.png`
-  * Metrics: `plot/color_metrics.png`
-  * Confusion Matrix: `plot/color_confusion_matrix.png`
-
-* **Total Loss** (combined): `plot/total_loss.png`
-
-Metrics are computed using **Accuracy, Precision, Recall, F1-score**, and confusion matrices provide detailed class-wise analysis.
+Metrics include Accuracy, Precision, Recall, and F1-score.  
+Confusion matrices provide class-level insights.
 
 ---
 
 ## Results
 
-* Multi-task learning improves **efficiency** and **knowledge transfer** compared to independent models.
-
-* Shared features enhance convergence, while task-specific branches capture unique patterns.
-
-* Model and metrics are saved for deployment and further evaluation:
-
-* **Model File**: `model/fashion_net.keras`
+- Multi-task learning improves efficiency and knowledge transfer compared to separate models.  
+- Shared features accelerate convergence.  
+- Task-specific branches capture unique patterns.  
+- Final model saved as: `model/fashion_net.keras`
 
 ---
 
 ## Repository
 
-Full source code and instructions are available at:
+Full source code and instructions available at:
 
-[Your GitHub Repository Link Here]
+[GitHub Repository Link]
 
 ---
 
-**Sina Balei**
-
+**Author: Sina Balei**
